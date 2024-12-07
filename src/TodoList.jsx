@@ -5,12 +5,24 @@ import { v4 as uuid } from "uuid";
 
 export default function TodoList() {
   const [inp, setInp] = useState('')
+  const [updateMode, setUpdateMode] = useState(false)
+  const [idToUpdate, setIdToUpdate] = useState('')
 
-
+const initialState = [
+  {
+    id : uuid(),
+    body : "go to school",
+    done : false
+  }, {
+    id : uuid(),
+    body : "eat breakfast",
+    done : false
+  }
+]
   const reducer = (state, action) => {
     switch (action.type) {
       case "createTask":
-        return [...state, { id: uuid(), body:action.body ,done: false, } ]
+        return [...state, { id: uuid(), body:action.body ,done: false } ]
 
       case "isDone" :
         const id = action.id;
@@ -18,24 +30,29 @@ export default function TodoList() {
           return task.id === id ? {...task , done : !task.done} : task
         })
 
+      case "deleteTask" :
+        return state = state.filter(task => {
+          return task.id !== action.id ;
+        })
 
+      case "updateIt" :
+        return state = state.map(task => {
+          return task.id === idToUpdate ? {...task, body : action.body} : task
+        })
+      
       default:
         return state;
     }
   };
 
-  const [data, dispatch] = useReducer(reducer, []);
+  const [data, dispatch] = useReducer(reducer, initialState);
 
   return (
     <div className="container mx-auto p-8 w-2/4 bg-gradient-to-b from-indigo-50 to-white rounded-lg shadow-xl mt-5">
       <h1 className="text-4xl font-extrabold text-center text-indigo-700 mb-6">
         My Todo List
       </h1>
-      <form className="flex flex-col gap-4 p-6 bg-white rounded-xl shadow-lg border border-gray-300" onSubmit={(e) => {
-        e.preventDefault();
-        dispatch({ type: "createTask", body: inp })
-        setInp('')
-      }}>
+      <form className="flex flex-col gap-4 p-6 bg-white rounded-xl shadow-lg border border-gray-300" >
         <input
           type="text"
           placeholder="Enter a new task"
@@ -43,12 +60,31 @@ export default function TodoList() {
           onChange={(e) => setInp(e.target.value)}
           value={inp}
         />
+        {
+          updateMode ?
+          <button
+          className="w-full px-5 py-3 text-lg font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition duration-200"
+          onClick={(e) =>{
+            e.preventDefault()
+            setUpdateMode(false)
+            dispatch({type : "updateIt", body : inp})
+            setInp('')
+          }}
+          >
+          update Task
+        </button>
+          :
         <button
-          type="submit"
+        onClick={(e) => {
+          e.preventDefault();
+          dispatch({ type: "createTask", body: inp })
+          setInp('')
+        }}
           className="w-full px-5 py-3 text-lg font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition duration-200"
           >
           Add Task
         </button>
+        }
       </form>
 
       {data.map((task) => {
@@ -63,10 +99,16 @@ export default function TodoList() {
               <span className={`text-lg font-bold ${task.done && 'text-red-600 line-through'}`}>{task.body}</span>
             </div>
             <div className="flex gap-4">
-              <button className="text-blue-500 hover:text-blue-600 focus:outline-none transition">
+              <button className="text-blue-500 hover:text-blue-600 focus:outline-none transition" onClick={() => {
+                setIdToUpdate(task.id)
+                setUpdateMode(true)
+                setInp(task.body)
+              }} >
                 <FaEdit className="text-xl" />
               </button>
-              <button className="text-red-500 hover:text-red-600 focus:outline-none transition">
+              <button className="text-red-500 hover:text-red-600 focus:outline-none transition" onClick={() => {
+                dispatch( {type:"deleteTask", id : task.id})
+              }}>
                 <FaTrash className="text-xl" />
               </button>
             </div>

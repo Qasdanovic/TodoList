@@ -22,6 +22,7 @@ const initialState = [
   const reducer = (state, action) => {
     switch (action.type) {
       case "createTask":
+        if(action.body === "") return state ;
         return [...state, { id: uuid(), body:action.body ,done: false } ]
 
       case "isDone" :
